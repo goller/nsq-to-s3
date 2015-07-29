@@ -1,0 +1,40 @@
+---
+defaults:
+  notify:
+    slack:
+      channel: "#spudgun"
+  timeout: 600s
+
+stages:
+  - name: test
+    events: [push, CI]
+  - name: build
+    policies:
+      - branch: ["|feature/*|", "dev", "master"]
+        action: build
+  - name: deploy
+    policies:
+      - branch: ["master"]
+        env: prod
+        action: kubeDeploy
+
+actions:
+  - name: build
+    commands:
+      - make install-dev-tools
+      - make dep-restore
+      - make build-docker
+      - DOCKER_USER=$VAR_QUAY_USER
+      - DOCKER_AUTH=$VAR_QUAY_AUTH
+      - make docker-login
+      - make publish
+    container: golang:1.4
+    containerDir: /go/src/github.com/timelinelabs/nsq-to-s3
+
+actions:
+  - name: kubeDeploy
+    config:
+      app: gnip-workflow
+      dir: k8s
+      command: rolling-update
+      cluster: prod

@@ -1,9 +1,9 @@
-PROJECT = github.com/goller/nsq-to-s3
+PROJECT = github.com/timelinelabs/nsq-to-s3
 
 IMAGE = nsq-to-s3
 EXECUTABLE = nsq-to-s3
 
-REMOTE_REPO = goller/nsq-to-s3
+REMOTE_REPO = timelinelabs/nsq-to-s3
 LDFLAGS = "-X $(PROJECT)/nsq-to-s3.Build $(REV) -s"
 TEST_COMMAND = godep go test
 REV ?= $(shell git rev-parse --short=8 HEAD)
@@ -68,7 +68,7 @@ build-docker:
 	docker build -t nsq-to-s3 .
 
 docker-login:
-	docker login -e="$$DOCKER_EMAIL" -u="$$DOCKER_USER" -p="$$DOCKER_AUTH"
+	docker login -e="." -u="$$DOCKER_USER" -p="$$DOCKER_AUTH"
 
 publish:
 	@echo "==> Publishing $(EXECUTABLE) to $(REMOTE_REPO)"

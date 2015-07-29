@@ -1,0 +1,43 @@
+kind: ReplicationController
+metadata:
+  labels:
+    name: prefilter
+    tag: '{{ .SG_HEAD }}'
+  name: prefilter-{{ .SG_HEAD }}
+spec:
+  selector:
+    name: prefilter
+    tag: '{{ .SG_HEAD }}'
+  template:
+    metadata:
+      labels:
+        name: prefilter
+        tag: '{{ .SG_HEAD }}'
+    spec:
+      containers:
+      - args:
+        - nsq-to-s3
+        - -bucket-messages=1000
+        - -bucket-seconds=60
+        - -channel="archive#ephemeral"
+        - -lookupd-http-address=nsqlookupd1.nsq.svc:4161
+        - -lookupd-http-address=nsqlookupd2.nsq.svc:4161
+        - -bucket="tl-gnip-workflow"
+        - -path-format="{{ .VAR_S3_PATH_FORMAT }}"
+        - -topic={{ .VAR_NSQ_TOPIC }}
+        image: quay.io/timeline_labs/nsq-to-s3:{{ .SG_HEAD }}
+        imagePullPolicy: Always
+        env:
+          - name: AWS_SECRET_ACCESS_KEY
+            value:  '{{ .VAR_AWS_SECRET_ACCESS_KEY }}'
+          - name: AWS_ACCESS_KEY_ID
+            value:  '{{ .VAR_AWS_ACCESS_KEY_ID }}'
+        name: comm
+      - args:
+        - csdlworkflow
+        - --etcd-path
+        - /config/prefilter
+        - --etcd-port
+        - "2379"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
